@@ -20,7 +20,7 @@ def check_date_time(title):
     matchs = RE_DT.findall(title)
     if not matchs:
         return False
-    return DATE_STR(datetime.strptime('_'.join(matchs), '%Y%m%d_%H%M%S'))
+    return DATE_STR(datetime.strptime('_'.join(matchs[0]), '%Y%m%d_%H%M%S'))
 
 
 def find_date_taken(title):

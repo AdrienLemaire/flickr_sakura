@@ -3,6 +3,7 @@
 
 import flickrapi
 import webbrowser
+import sys
 
 from local_settings import API_KEY, API_SECRET, USER_ID, ALBUM_NAME
 from utils import find_date_taken
@@ -30,19 +31,35 @@ def update_metas(flickr, photo_id):
         date_taken = find_date_taken(title)
         if date_taken:
             result = flickr.photos.setDates(photo_id=photo_id, date_taken=date_taken)
-            import ipdb; ipdb.set_trace()
         else:
             import ipdb; ipdb.set_trace()
     else:
-        print infos['photo']['dates']['taken']
+        date_taken = infos['photo']['dates']['taken']
+        if date_taken.endswith('00:00:00'):
+            import ipdb; ipdb.set_trace()
+        else:
+            print date_taken
+            with open('./images_done.txt', 'a') as f:
+                f.write('{}\n'.format(infos['photo']['id']))
+        
+
+def get_list_images_done():
+    with open('./images_done.txt', 'r') as f:
+        return f.read().split('\n')
 
 
 def main():
     flickr = auth()
     photos = get_album(flickr, ALBUM_NAME)
     print "update photos metas"
+    done = get_list_images_done()
     for photo in photos['photoset']['photo']:
-        update_metas(flickr, photo['id'])
+        if not photo['id'] in done:
+            update_metas(flickr, photo['id'])
+        else:
+            sys.stdout.write("."),
+            sys.stdout.flush()
+            
 
 
 if __name__ == '__main__':
