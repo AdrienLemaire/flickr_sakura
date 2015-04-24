@@ -4,7 +4,8 @@
 import flickrapi
 import webbrowser
 
-from local_settings import API_KEY, API_SECRET, USER_ID
+from local_settings import API_KEY, API_SECRET, USER_ID, ALBUM_NAME
+from utils import find_date_taken
 
 
 def auth():
@@ -17,24 +18,30 @@ def auth():
 def get_album(flickr, name):
     print "get album"
     sets = flickr.photosets.getList(user_id=USER_ID)
-    amelie = [s for s in sets['photosets']['photoset'] if
+    album = [s for s in sets['photosets']['photoset'] if
         s['title']['_content'] == name][0]
-    photos = flickr.photosets.getPhotos(photoset_id=amelie['id'])
+    return flickr.photosets.getPhotos(photoset_id=album['id'])
 
 
 def update_metas(flickr, photo_id):
     infos = flickr.photos.getInfo(photo_id=photo_id)
     if infos['photo']['dates']['takenunknown'] == '1':
-        import ipdb; ipdb.set_trace()
+        title = infos['photo']['title']['_content']
+        date_taken = find_date_taken(title)
+        if date_taken:
+            result = flickr.photos.setDates(photo_id=photo_id, date_taken=date_taken)
+            import ipdb; ipdb.set_trace()
+        else:
+            import ipdb; ipdb.set_trace()
     else:
         print infos['photo']['dates']['taken']
 
 
 def main():
     flickr = auth()
-    amelie = get_album(flickr, u'Sakura Amélie')
+    photos = get_album(flickr, ALBUM_NAME)
     print "update photos metas"
-    for photo in reversed(photos['photoset']['photo']):
+    for photo in photos['photoset']['photo']:
         update_metas(flickr, photo['id'])
 
 
