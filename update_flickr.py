@@ -26,21 +26,18 @@ def get_album(flickr, name):
 
 def update_metas(flickr, photo_id):
     infos = flickr.photos.getInfo(photo_id=photo_id)
+    title = infos['photo']['title']['_content']
+    date_taken = infos['photo']['dates']['taken']
     if infos['photo']['dates']['takenunknown'] == '1':
-        title = infos['photo']['title']['_content']
         date_taken = find_date_taken(title)
         if date_taken:
             result = flickr.photos.setDates(photo_id=photo_id, date_taken=date_taken)
         else:
             import ipdb; ipdb.set_trace()
     else:
-        date_taken = infos['photo']['dates']['taken']
-        if date_taken.endswith('00:00:00'):
-            import ipdb; ipdb.set_trace()
-        else:
-            print date_taken
-            with open('./images_done.txt', 'a') as f:
-                f.write('{}\n'.format(infos['photo']['id']))
+        print date_taken
+        with open('./images_done.txt', 'a') as f:
+            f.write('{}\n'.format(infos['photo']['id']))
         
 
 def get_list_images_done():
