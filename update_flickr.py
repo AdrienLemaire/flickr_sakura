@@ -1,12 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+# TIPS
+
+## Delete pics
+> photos = flickr.photosets.getPhotos(photoset_id=album_id, user_id=USER_ID,
+    extras='date_taken,tags')['photoset']['photo'] 
+> pics = [p for p in photos if p['datetaken'].startswith('2015-04-27') and
+    p['tags'] == 'line']
+> flickr.photosets.removePhotos(photoset_id=album_id,photo_ids=','.join([p['id']
+    for p in today_pics]))
+"""
+
+import collections
 import flickrapi
 import webbrowser
 import sys
 
 from local_settings import API_KEY, API_SECRET, USER_ID, ALBUM_NAME
 from utils import find_date_taken
+
 
 
 IMAGE_CACHE = []
@@ -70,13 +84,27 @@ def main():
 
     print "\nReorder album"
     photos = flickr.photosets.getPhotos(photoset_id=album_id, user_id=USER_ID,
-            extras='date_taken')['photoset']['photo']
+        extras='date_taken')['photoset']['photo']
     photos = sorted(photos, key=lambda p: p['datetaken'], reverse=True)
     flickr.photosets.reorderPhotos(
         photoset_id=album_id,
         photo_ids=','.join([p['id'] for p in photos]),
     )
 
+    duplicates = [x for x, y in collections.Counter([p['title'] for p in
+        photos]).items() if y > 1]
+    if duplicates:
+        print "\nRemoving duplicates"
+        to_remove = []
+        for p in photos:
+            if p['title'] in duplicates:
+                to_remove.append(p['id'])
+                duplicates.pop(duplicates.index(p['title']))
+        flickr.photosets.removePhotos(
+            photoset_id=album_id,
+            photo_ids=','.join(to_remove),
+        )
+        print "Removed {} duplicates".format(len(to_remove))
 
 if __name__ == '__main__':
     main()
