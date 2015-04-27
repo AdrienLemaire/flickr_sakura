@@ -29,14 +29,14 @@ with open('./images_done.txt', 'r') as f:
 
 
 def auth():
-    print "authenticate"
+    print("authenticate")
     flickr = flickrapi.FlickrAPI(API_KEY, API_SECRET, format='parsed-json')
     flickr.authenticate_via_browser(perms='write')
     return flickr
 
 
 def get_album(flickr, name):
-    print "get album"
+    print("get album")
     sets = flickr.photosets.getList(user_id=USER_ID)
     album = [s for s in sets['photosets']['photoset'] if
         s['title']['_content'] == name][0]
@@ -65,7 +65,7 @@ def update_metas(flickr, photo_id):
 
 
     if not infos['photo']['id'] in IMAGE_CACHE:
-        print date_taken
+        print(date_taken)
         with open('./images_done.txt', 'a') as f:
             f.write('{}\n'.format(infos['photo']['id']))
         
@@ -74,7 +74,7 @@ def update_metas(flickr, photo_id):
 def main():
     flickr = auth()
     album_id, photos = get_album(flickr, ALBUM_NAME)
-    print "update photos metas"
+    print("update photos metas")
     for photo in photos['photoset']['photo']:
         if not photo['id'] in IMAGE_CACHE:
             update_metas(flickr, photo['id'])
@@ -82,7 +82,7 @@ def main():
             sys.stdout.write("."),
             sys.stdout.flush()
 
-    print "\nReorder album"
+    print("\nReorder album")
     photos = flickr.photosets.getPhotos(photoset_id=album_id, user_id=USER_ID,
         extras='date_taken')['photoset']['photo']
     photos = sorted(photos, key=lambda p: p['datetaken'], reverse=True)
@@ -94,7 +94,7 @@ def main():
     duplicates = [x for x, y in collections.Counter([p['title'] for p in
         photos]).items() if y > 1]
     if duplicates:
-        print "\nRemoving duplicates"
+        print("\nRemoving duplicates")
         to_remove = []
         for p in photos:
             if p['title'] in duplicates:
@@ -104,7 +104,8 @@ def main():
             photoset_id=album_id,
             photo_ids=','.join(to_remove),
         )
-        print "Removed {} duplicates".format(len(to_remove))
+        print("Removed {} duplicates".format(len(to_remove)))
+
 
 if __name__ == '__main__':
     main()
